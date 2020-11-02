@@ -1,0 +1,40 @@
+{
+  "project_info": {
+    "project_number": "701934210610",
+    "firebase_url": "https://the-board-sps.firebaseio.com",
+    "project_id": "the-board-sps",
+    "storage_bucket": "the-board-sps.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:701934210610:android:ae45287cd52d5451ed762b",
+        "android_client_info": {
+          "package_name": "com.example.the_board"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "701934210610-dl9ssbgr4uear5m3buuq4rf83ih2fe7i.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDULe9yZfWZ9zNxh7IUbg2fv5V4Bw2Ymoc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "701934210610-dl9ssbgr4uear5m3buuq4rf83ih2fe7i.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
