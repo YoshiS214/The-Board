@@ -34,7 +34,7 @@ class AppTabBar extends StatelessWidget {
           children: [
             WorkroomPage(),
             StreamPage(),
-            Icon(Icons.directions_bike),
+            Icon(Icons.directions_bike), // Swap with widget of account page
           ],
         ),
       ),

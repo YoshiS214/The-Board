@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import 'package:the_board/pages/appTabBar.dart'
+import 'package:the_board/pages/appTabBar.dart';
 
 void main() {
   runApp(MyApp());
@@ -69,8 +69,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      home: AppTabBar()
-    );
+    return MaterialApp(home: AppTabBar());
   }
 }
