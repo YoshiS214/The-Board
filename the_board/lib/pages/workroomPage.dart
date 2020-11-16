@@ -9,8 +9,14 @@ class WorkroomPage extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       initialRoute: '/',
       routes: <String, WidgetBuilder>{
-        '/': (BuildContext context) => WorkRoomList(),
-        '/chat': (BuildContext context) => ChatPage(),
+        '/': (BuildContext context) => GestureDetector(
+              child: WorkRoomList(),
+              onTap: () => FocusScope.of(context).unfocus(),
+            ),
+        '/chat': (BuildContext context) => GestureDetector(
+              child: ChatPage(),
+              onTap: () => FocusScope.of(context).unfocus(),
+            ),
       },
       theme: ThemeData(
         pageTransitionsTheme: const PageTransitionsTheme(
@@ -81,6 +87,7 @@ class WorkRoomList extends StatelessWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Material(
+                        color: Colors.transparent,
                         child: Text(
                           room[1],
                           style: TextStyle(
@@ -90,6 +97,7 @@ class WorkRoomList extends StatelessWidget {
                         ),
                       ),
                       Material(
+                        color: Colors.transparent,
                         child: Text(
                           room[3],
                           maxLines: 2,
@@ -103,6 +111,7 @@ class WorkRoomList extends StatelessWidget {
                 Column(
                   children: [
                     Material(
+                      color: Colors.transparent,
                       child: Text(room[2], textAlign: TextAlign.right), // Date
                     ),
                     Icon(Icons.chevron_right)
@@ -111,8 +120,10 @@ class WorkRoomList extends StatelessWidget {
               ],
             ),
           ),
-          onTap: () =>
-              {Navigator.of(context).pushNamed('/chat', arguments: room)}),
+          onTap: () => {
+                FocusScope.of(context).unfocus(),
+                Navigator.of(context).pushNamed('/chat', arguments: room)
+              }),
     );
   }
 
@@ -151,7 +162,17 @@ class WorkRoomList extends StatelessWidget {
         right: 0,
         height: 50,
         child: Container(
-          color: Colors.grey,
+          decoration: BoxDecoration(
+            color: Colors.grey,
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black26,
+                spreadRadius: 1.0,
+                blurRadius: 10.0,
+                offset: Offset(0, 5),
+              ),
+            ],
+          ),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
             child: Container(
@@ -186,7 +207,12 @@ class WorkRoomList extends StatelessWidget {
   }
 }
 
-class ChatPage extends StatelessWidget {
+class ChatPage extends StatefulWidget {
+  @override
+  ChatPageState createState() => ChatPageState();
+}
+
+class ChatPageState extends State<ChatPage> {
   final TextEditingController _textEditingController =
       new TextEditingController();
 
@@ -194,55 +220,61 @@ class ChatPage extends StatelessWidget {
 
   String _text = '';
 
-  @override
-  void initState() {
-    _textEditingController.addListener(_printLatestValue);
+  void _handleText(String e) {
+    setState(() {
+      _text = e;
+    });
   }
 
   @override
   void dispose() {
     _textEditingController.dispose();
+    super.dispose();
   }
 
-  void _handleText(String e) {
-    _text = e;
+  double textfieldHeight() {
+    if (_text == '') {
+      return 50;
+    } else {
+      return double.infinity;
+    }
   }
 
-  void _printLatestValue() {
-    print("入力状況: ${_textEditingController.text}");
-  }
-
-  void _submission(String e) {
-    print(_textEditingController.text);
-    _textEditingController.clear();
-    _text = '';
-  }
-
-  Widget chatTile(List chat) {
+  Widget chatTile(List chat, BuildContext context) {
     var padding;
     var radiusL;
     var radiusR;
     var accountIcon;
+    var cardColor;
+    var textColor;
+
     if (chat[0] == myAccount) {
       accountIcon = Container();
       radiusL = Radius.circular(16);
       radiusR = Radius.circular(0);
       padding = EdgeInsets.fromLTRB(16.0, 8.0, 0, 8.0);
+      cardColor = Theme.of(context).accentColor;
+      textColor = Theme.of(context).accentTextTheme.bodyText1.color;
     } else {
       accountIcon = Padding(
         padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
-        child: Icon(Icons.account_circle), //Account icon
+        child: Icon(
+          Icons.account_circle,
+          color: Theme.of(context).iconTheme.color,
+        ), //Account icon
       );
       radiusR = Radius.circular(16);
       radiusL = Radius.circular(0);
       padding = EdgeInsets.fromLTRB(0, 8.0, 16.0, 8.0);
+      cardColor = Theme.of(context).cardColor;
+      textColor = Theme.of(context).textTheme.bodyText1.color;
     }
 
     return Padding(
         padding: padding,
         child: Container(
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: cardColor,
             borderRadius: BorderRadius.only(
               topRight: radiusR,
               bottomRight: radiusR,
@@ -263,20 +295,32 @@ class ChatPage extends StatelessWidget {
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
                           Material(
+                            color: Colors.transparent,
                             child: Text(
                               chat[0],
-                              style: TextStyle(fontWeight: FontWeight.bold),
+                              style: TextStyle(
+                                fontWeight: FontWeight.bold,
+                                color: textColor,
+                              ),
                               maxLines: 1,
                             ),
                           ), // Name
                           Material(
+                              color: Colors.transparent,
                               child: Text(
-                            chat[1],
-                            maxLines: 1,
-                          )), // Date
+                                chat[1],
+                                style: TextStyle(color: textColor),
+                                maxLines: 1,
+                              )), // Date
                         ],
                       ),
-                      Material(child: Text(chat[2])) // Main text
+                      Material(
+                        color: Colors.transparent,
+                        child: Text(
+                          chat[2],
+                          style: TextStyle(color: textColor),
+                        ),
+                      ) // Main text
                     ],
                   ),
                 )
@@ -303,7 +347,7 @@ class ChatPage extends StatelessWidget {
         trailing: IconButton(icon: Icon(Icons.error_outline)),
       ),
       child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
+        mainAxisSize: MainAxisSize.min,
         children: [
           Expanded(
             child: Stack(children: [
@@ -325,49 +369,99 @@ class ChatPage extends StatelessWidget {
                   controller: _scrollController,
                   itemCount: args[4].length,
                   itemBuilder: (BuildContext context, int index) {
-                    return chatTile(args[4][index]);
+                    return chatTile(args[4][index], context);
                   },
                 ),
               ),
             ]),
           ),
-          Container(
-            height: 50,
-            color: Colors.grey,
-            child: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Row(
-                children: [
-                  IconButton(icon: Icon(Icons.add), onPressed: null),
-                  IconButton(icon: Icon(Icons.photo), onPressed: null),
-                  Expanded(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        borderRadius: BorderRadius.circular(17),
-                        color: Colors.white,
+          ConstrainedBox(
+            constraints: BoxConstraints(maxHeight: textfieldHeight()),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Colors.grey,
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black26,
+                    spreadRadius: 1.0,
+                    blurRadius: 10.0,
+                    offset: Offset(0, -5),
+                  ),
+                ],
+              ),
+              child: Padding(
+                padding: const EdgeInsets.all(8.0),
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.end,
+                  children: [
+                    SizedBox(
+                      height: 34,
+                      width: 34,
+                      child: FittedBox(
+                        fit: BoxFit.fill,
+                        child: IconButton(
+                            icon: Icon(Icons.add),
+                            iconSize: 34,
+                            onPressed: null),
                       ),
-                      child: Padding(
-                        padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
-                        child: Material(
-                          child: TextField(
-                            controller: _textEditingController,
-                            onChanged: _handleText,
-                            onSubmitted: _submission,
-                            decoration:
-                                InputDecoration(border: InputBorder.none),
-                            keyboardType: TextInputType.multiline,
-                            style: TextStyle(color: Colors.black),
-                            minLines: 1,
-                            maxLines: null,
-                            maxLength: null,
-                            textAlign: TextAlign.left,
+                    ),
+                    SizedBox(
+                      height: 34,
+                      width: 34,
+                      child: FittedBox(
+                        fit: BoxFit.fill,
+                        child: IconButton(
+                            icon: Icon(Icons.photo),
+                            iconSize: 34,
+                            onPressed: null),
+                      ),
+                    ),
+                    Expanded(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          borderRadius: BorderRadius.circular(17),
+                          color: Colors.white,
+                        ),
+                        child: Padding(
+                          padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
+                          child: Theme(
+                            data: Theme.of(context)
+                                .copyWith(splashColor: Colors.transparent),
+                            child: TextField(
+                              controller: _textEditingController,
+                              onChanged: _handleText,
+                              decoration: InputDecoration(
+                                border: InputBorder.none,
+                              ),
+                              keyboardType: TextInputType.multiline,
+                              autocorrect: true,
+                              autofocus: false,
+                              maxLines: null,
+                              maxLength: null,
+                              obscureText: false,
+                              textAlign: TextAlign.left,
+                              textAlignVertical: TextAlignVertical.top,
+                            ),
                           ),
                         ),
                       ),
                     ),
-                  ),
-                  IconButton(icon: Icon(Icons.send), onPressed: null),
-                ],
+                    SizedBox(
+                      height: 34,
+                      width: 34,
+                      child: FittedBox(
+                        fit: BoxFit.fill,
+                        child: IconButton(
+                            icon: Icon(Icons.send),
+                            iconSize: 34,
+                            onPressed: () => {
+                                  _textEditingController.text = "",
+                                  FocusScope.of(context).unfocus()
+                                }),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
