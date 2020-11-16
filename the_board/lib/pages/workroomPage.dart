@@ -5,22 +5,28 @@ import 'package:flutter/cupertino.dart';
 class WorkroomPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
+    // This is material app inside AppTabBar
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      initialRoute: '/',
+      initialRoute: '/chatList',
       routes: <String, WidgetBuilder>{
-        '/': (BuildContext context) => GestureDetector(
+        // Route to list of chats (work rooms)
+        '/chatList': (BuildContext context) => GestureDetector(
               child: WorkRoomList(),
-              onTap: () => FocusScope.of(context).unfocus(),
+              onTap: () => FocusScope.of(context)
+                  .unfocus(), // Hide keyboard when tap other parts
             ),
+        // Route to chat page
         '/chat': (BuildContext context) => GestureDetector(
               child: ChatPage(),
-              onTap: () => FocusScope.of(context).unfocus(),
+              onTap: () => FocusScope.of(context)
+                  .unfocus(), // Hide keyboard when tap other parts
             ),
       },
       theme: ThemeData(
         pageTransitionsTheme: const PageTransitionsTheme(
           builders: <TargetPlatform, PageTransitionsBuilder>{
+            // Animation of transition which moves right to left
             TargetPlatform.android: CupertinoPageTransitionsBuilder(),
             TargetPlatform.iOS: CupertinoPageTransitionsBuilder(),
           },
@@ -30,6 +36,8 @@ class WorkroomPage extends StatelessWidget {
   }
 }
 
+//=========================================================================
+// Class for workroom list to show all workrooms
 class WorkRoomList extends StatelessWidget {
   final List workrooms = [
     [
@@ -66,6 +74,7 @@ class WorkRoomList extends StatelessWidget {
 
   Widget workroomTile(List room, BuildContext context) {
     IconData classIcon;
+    // Check if it is class or not
     if (room[0]) {
       classIcon = Icons.book;
     } else {
@@ -80,6 +89,7 @@ class WorkRoomList extends StatelessWidget {
               children: [
                 Padding(
                   padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
+                  // Icon of workroom
                   child: Icon(classIcon),
                 ),
                 Flexible(
@@ -88,16 +98,17 @@ class WorkRoomList extends StatelessWidget {
                     children: [
                       Material(
                         color: Colors.transparent,
+                        // Show room name
                         child: Text(
                           room[1],
-                          style: TextStyle(
-                              fontWeight: FontWeight.bold), // Room name
+                          style: TextStyle(fontWeight: FontWeight.bold),
                           textAlign: TextAlign.left,
                           maxLines: 1,
                         ),
                       ),
                       Material(
                         color: Colors.transparent,
+                        // Show the last chat in this chat group
                         child: Text(
                           room[3],
                           maxLines: 2,
@@ -112,7 +123,8 @@ class WorkRoomList extends StatelessWidget {
                   children: [
                     Material(
                       color: Colors.transparent,
-                      child: Text(room[2], textAlign: TextAlign.right), // Date
+                      // Show date of the last chat
+                      child: Text(room[2], textAlign: TextAlign.right),
                     ),
                     Icon(Icons.chevron_right)
                   ],
@@ -121,6 +133,7 @@ class WorkRoomList extends StatelessWidget {
             ),
           ),
           onTap: () => {
+                // When tapped, hide keyboard and navigate to chat
                 FocusScope.of(context).unfocus(),
                 Navigator.of(context).pushNamed('/chat', arguments: room)
               }),
@@ -128,6 +141,7 @@ class WorkRoomList extends StatelessWidget {
   }
 
   List<Widget> workroomList(BuildContext context) {
+    // This create a list of all workroom tiles
     List<Widget> list = [];
     Container line = Container(
       height: 0,
@@ -145,18 +159,19 @@ class WorkRoomList extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Stack(children: [
+      // Bottom part which shows the list of workroom
       Positioned(
-        child: ListView(
-          children: workroomList(context),
-          physics: const AlwaysScrollableScrollPhysics(),
-        ),
         top: 50,
         left: 0,
         right: 0,
         bottom: 0,
+        child: ListView(
+          children: workroomList(context),
+          physics: const AlwaysScrollableScrollPhysics(),
+        ),
       ),
+      // Top part whcih shows the search bar
       Positioned(
-        // Search bar
         top: 0,
         left: 0,
         right: 0,
@@ -184,6 +199,7 @@ class WorkRoomList extends StatelessWidget {
                 padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
                 child: Row(
                   children: [
+                    // Search icon
                     Padding(
                       padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
                       child: Icon(
@@ -191,6 +207,7 @@ class WorkRoomList extends StatelessWidget {
                         color: Colors.grey,
                       ),
                     ),
+                    // Textfield to search
                     Expanded(
                       child: TextField(
                         decoration: InputDecoration(border: InputBorder.none),
@@ -207,6 +224,8 @@ class WorkRoomList extends StatelessWidget {
   }
 }
 
+//==========================================================================
+// Class for chat page
 class ChatPage extends StatefulWidget {
   @override
   ChatPageState createState() => ChatPageState();
@@ -218,6 +237,7 @@ class ChatPageState extends State<ChatPage> {
 
   String myAccount = "Charlie Benello";
 
+  // Text entered
   String _text = '';
 
   void _handleText(String e) {
@@ -232,6 +252,7 @@ class ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  // Control the height of input part
   double textfieldHeight() {
     if (_text == '') {
       return 50;
@@ -240,6 +261,7 @@ class ChatPageState extends State<ChatPage> {
     }
   }
 
+  // Tile for each chat
   Widget chatTile(List chat, BuildContext context) {
     var padding;
     var radiusL;
@@ -249,6 +271,12 @@ class ChatPageState extends State<ChatPage> {
     var textColor;
 
     if (chat[0] == myAccount) {
+      // If chat is mine,
+      //    no account icon,
+      //    aligned right,
+      //    left edges are rounded
+      //    tile is accent color
+      //    text is accent text theme
       accountIcon = Container();
       radiusL = Radius.circular(16);
       radiusR = Radius.circular(0);
@@ -256,6 +284,12 @@ class ChatPageState extends State<ChatPage> {
       cardColor = Theme.of(context).accentColor;
       textColor = Theme.of(context).accentTextTheme.bodyText1.color;
     } else {
+      // If chat is mine,
+      //    has account icon,
+      //    aligned left,
+      //    right edges are rounded
+      //    tile is card color
+      //    text is text theme
       accountIcon = Padding(
         padding: const EdgeInsets.fromLTRB(0, 0, 8.0, 0),
         child: Icon(
@@ -286,6 +320,7 @@ class ChatPageState extends State<ChatPage> {
             padding: const EdgeInsets.all(8.0),
             child: Row(
               children: [
+                // Account icon
                 accountIcon,
                 Flexible(
                   child: Column(
@@ -294,6 +329,7 @@ class ChatPageState extends State<ChatPage> {
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
+                          // Show person's name made the chat
                           Material(
                             color: Colors.transparent,
                             child: Text(
@@ -304,23 +340,25 @@ class ChatPageState extends State<ChatPage> {
                               ),
                               maxLines: 1,
                             ),
-                          ), // Name
+                          ),
+                          // Show data that the chat was posted
                           Material(
                               color: Colors.transparent,
                               child: Text(
                                 chat[1],
                                 style: TextStyle(color: textColor),
                                 maxLines: 1,
-                              )), // Date
+                              )),
                         ],
                       ),
+                      // Show main text
                       Material(
                         color: Colors.transparent,
                         child: Text(
                           chat[2],
                           style: TextStyle(color: textColor),
                         ),
-                      ) // Main text
+                      )
                     ],
                   ),
                 )
@@ -332,11 +370,15 @@ class ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
+    // argument (list about chat) from the navigator
     final List args = ModalRoute.of(context).settings.arguments;
+    // controller for listview.builder
     final ScrollController _scrollController = ScrollController();
+
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
       navigationBar: CupertinoNavigationBar(
+        // Button to go back to workroom list
         leading: CupertinoNavigationBarBackButton(
           previousPageTitle: 'Work Rooms',
           onPressed: () {
@@ -344,6 +386,7 @@ class ChatPageState extends State<ChatPage> {
           },
         ),
         middle: new Text(args[1]),
+        // Button to report
         trailing: IconButton(icon: Icon(Icons.error_outline)),
       ),
       child: Column(
@@ -351,12 +394,14 @@ class ChatPageState extends State<ChatPage> {
         children: [
           Expanded(
             child: Stack(children: [
+              // Background of chat page (Could be set by user to some pictures?)
               Positioned(
                   top: 0,
                   left: 0,
                   right: 0,
                   bottom: 0,
                   child: Container(color: Colors.grey[400])),
+              // Flow of chats
               Positioned(
                 top: 0,
                 left: 0,
@@ -367,6 +412,7 @@ class ChatPageState extends State<ChatPage> {
                   shrinkWrap: true,
                   reverse: true,
                   controller: _scrollController,
+                  // Number of chats
                   itemCount: args[4].length,
                   itemBuilder: (BuildContext context, int index) {
                     return chatTile(args[4][index], context);
@@ -375,6 +421,7 @@ class ChatPageState extends State<ChatPage> {
               ),
             ]),
           ),
+          // Input part
           ConstrainedBox(
             constraints: BoxConstraints(maxHeight: textfieldHeight()),
             child: Container(
@@ -394,28 +441,33 @@ class ChatPageState extends State<ChatPage> {
                 child: Row(
                   crossAxisAlignment: CrossAxisAlignment.end,
                   children: [
+                    // Icon button to add a file
                     SizedBox(
                       height: 34,
                       width: 34,
                       child: FittedBox(
                         fit: BoxFit.fill,
                         child: IconButton(
-                            icon: Icon(Icons.add),
-                            iconSize: 34,
-                            onPressed: null),
+                          icon: Icon(Icons.add),
+                          iconSize: 34,
+                          onPressed: null,
+                        ),
                       ),
                     ),
+                    // Icon button to add a photo
                     SizedBox(
                       height: 34,
                       width: 34,
                       child: FittedBox(
                         fit: BoxFit.fill,
                         child: IconButton(
-                            icon: Icon(Icons.photo),
-                            iconSize: 34,
-                            onPressed: null),
+                          icon: Icon(Icons.photo),
+                          iconSize: 34,
+                          onPressed: null,
+                        ),
                       ),
                     ),
+                    // Text input
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -436,6 +488,7 @@ class ChatPageState extends State<ChatPage> {
                               keyboardType: TextInputType.multiline,
                               autocorrect: true,
                               autofocus: false,
+                              // No limit of words number and lines
                               maxLines: null,
                               maxLength: null,
                               obscureText: false,
@@ -446,6 +499,7 @@ class ChatPageState extends State<ChatPage> {
                         ),
                       ),
                     ),
+                    // Icon button to send a chat
                     SizedBox(
                       height: 34,
                       width: 34,
