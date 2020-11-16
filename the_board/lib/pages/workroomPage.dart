@@ -370,25 +370,59 @@ class ChatPageState extends State<ChatPage> {
 
   @override
   Widget build(BuildContext context) {
-    // argument (list about chat) from the navigator
+    // Argument (list about chat) from the navigator
     final List args = ModalRoute.of(context).settings.arguments;
-    // controller for listview.builder
+    // Controller for listview.builder
     final ScrollController _scrollController = ScrollController();
+    // Actions when report button is pressed
+    final actions = ["Report this group", "Leave this group"];
 
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
       navigationBar: CupertinoNavigationBar(
-        // Button to go back to workroom list
-        leading: CupertinoNavigationBarBackButton(
-          previousPageTitle: 'Work Rooms',
-          onPressed: () {
-            Navigator.of(context).pop();
-          },
-        ),
-        middle: new Text(args[1]),
-        // Button to report
-        trailing: IconButton(icon: Icon(Icons.error_outline)),
-      ),
+          // Button to go back to workroom list
+          leading: CupertinoNavigationBarBackButton(
+            previousPageTitle: 'Work Rooms',
+            onPressed: () {
+              Navigator.of(context).pop();
+            },
+          ),
+          middle: new Text(args[1]),
+          // Button to report
+          trailing: PopupMenuButton(
+            icon: Icon(Icons.error_outline),
+            onSelected: (String value) => {
+              showDialog(
+                  context: context,
+                  builder: (context) {
+                    return AlertDialog(
+                      title: Material(child: Text(value)),
+                      content: Material(
+                          child: Text(
+                              "Would you like to ${value.toLowerCase()}?")),
+                      actions: [
+                        FlatButton(
+                            onPressed: () => Navigator.pop(context),
+                            child: Material(
+                              child: Text("No"),
+                            )),
+                        FlatButton(
+                            // Function should be set here to report or leave this chat group
+                            onPressed: null,
+                            child: Material(child: Text("Yes"))),
+                      ],
+                    );
+                  })
+            },
+            itemBuilder: ((BuildContext context) {
+              return actions.map((String s) {
+                return PopupMenuItem(
+                  child: Material(child: Text(s)),
+                  value: s,
+                );
+              }).toList();
+            }),
+          )),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
