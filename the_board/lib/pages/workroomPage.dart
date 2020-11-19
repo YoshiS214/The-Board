@@ -16,6 +16,12 @@ class WorkroomPage extends StatelessWidget {
               onTap: () => FocusScope.of(context)
                   .unfocus(), // Hide keyboard when tap other parts
             ),
+        // Route to search chat
+        '/searchChat': (BuildContext context) => GestureDetector(
+              child: SearchChat(),
+              onTap: () => FocusScope.of(context)
+                  .unfocus(), // Hide keyboard when tap other parts
+            ),
         // Route to chat page
         '/chat': (BuildContext context) => GestureDetector(
               child: ChatPage(),
@@ -36,7 +42,7 @@ class WorkroomPage extends StatelessWidget {
   }
 }
 
-//=========================================================================
+//==========================================================================
 // Class for workroom list to show all workrooms
 class WorkRoomList extends StatelessWidget {
   final List workrooms = [
@@ -119,6 +125,9 @@ class WorkRoomList extends StatelessWidget {
                     ],
                   ),
                 ),
+                Expanded(
+                  child: Container(),
+                ),
                 Column(
                   children: [
                     Material(
@@ -145,8 +154,10 @@ class WorkRoomList extends StatelessWidget {
     List<Widget> list = [];
     Container line = Container(
       height: 0,
-      decoration:
-          BoxDecoration(border: Border(top: BorderSide(color: Colors.grey))),
+      decoration: BoxDecoration(
+          border: Border(
+              top: BorderSide(
+                  color: Theme.of(context).dividerColor, width: 2.0))),
     );
     list.add(line);
     for (List x in workrooms) {
@@ -177,50 +188,102 @@ class WorkRoomList extends StatelessWidget {
         right: 0,
         height: 50,
         child: Container(
-          decoration: BoxDecoration(
-            color: Colors.grey,
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black26,
-                spreadRadius: 1.0,
-                blurRadius: 10.0,
-                offset: Offset(0, 5),
-              ),
-            ],
-          ),
+          decoration:
+              BoxDecoration(color: Theme.of(context).scaffoldBackgroundColor),
           child: Padding(
             padding: const EdgeInsets.all(8.0),
-            child: Container(
-              decoration: BoxDecoration(
-                borderRadius: BorderRadius.circular(17),
-                color: Colors.white,
-              ),
-              child: Padding(
-                padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
-                child: Row(
-                  children: [
-                    // Search icon
-                    Padding(
-                      padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                      child: Icon(
-                        Icons.search,
-                        color: Colors.grey,
+            child: GestureDetector(
+              child: Container(
+                decoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(17),
+                  color: Colors.grey[400],
+                ),
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
+                  child: Row(
+                    children: [
+                      // Search icon
+                      Padding(
+                        padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                        child: Icon(
+                          Icons.search,
+                        ),
                       ),
-                    ),
-                    // Textfield to search
-                    Expanded(
-                      child: TextField(
-                        decoration: InputDecoration(border: InputBorder.none),
+                      // Textfield to search
+                      Expanded(
+                        child: Container(),
                       ),
-                    ),
-                  ],
+                    ],
+                  ),
                 ),
               ),
+              onTap: () {
+                Navigator.of(context).pushNamed('/searchChat');
+              },
             ),
           ),
         ),
       )
     ]);
+  }
+}
+
+//==========================================================================
+// Class for search chat
+class SearchChat extends StatefulWidget {
+  @override
+  SearchChatState createState() => SearchChatState();
+}
+
+class SearchChatState extends State<SearchChat> {
+  final _controller = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return CupertinoPageScaffold(
+      resizeToAvoidBottomInset: false,
+      navigationBar: CupertinoNavigationBar(
+        // Button to go back to workroom list
+        leading: CupertinoNavigationBarBackButton(
+          onPressed: () {
+            Navigator.of(context).pop();
+          },
+        ),
+        middle: Container(
+          decoration: BoxDecoration(
+            borderRadius: BorderRadius.circular(17),
+            color: Colors.grey[400],
+          ),
+          child: Padding(
+            padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
+            child: Row(
+              children: [
+                // Search icon
+                Padding(
+                  padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                  child: Icon(
+                    Icons.search,
+                  ),
+                ),
+                // Textfield to search
+                Expanded(
+                  child: TextField(
+                    controller: _controller,
+                    decoration: InputDecoration(
+                      border: InputBorder.none,
+                    ),
+                    maxLines: 1,
+                    textAlign: TextAlign.left,
+                    textAlignVertical: TextAlignVertical.center,
+                  ),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+      child: ListView(),
+    );
   }
 }
 
@@ -382,7 +445,6 @@ class ChatPageState extends State<ChatPage> {
       navigationBar: CupertinoNavigationBar(
           // Button to go back to workroom list
           leading: CupertinoNavigationBarBackButton(
-            previousPageTitle: 'Work Rooms',
             onPressed: () {
               Navigator.of(context).pop();
             },
@@ -483,6 +545,19 @@ class ChatPageState extends State<ChatPage> {
                         fit: BoxFit.fill,
                         child: IconButton(
                           icon: Icon(Icons.add),
+                          iconSize: 34,
+                          onPressed: null,
+                        ),
+                      ),
+                    ),
+                    // Icon button to take a photo
+                    SizedBox(
+                      height: 34,
+                      width: 34,
+                      child: FittedBox(
+                        fit: BoxFit.fill,
+                        child: IconButton(
+                          icon: Icon(Icons.photo_camera),
                           iconSize: 34,
                           onPressed: null,
                         ),
