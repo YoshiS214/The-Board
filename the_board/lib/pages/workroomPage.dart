@@ -1,6 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/cupertino.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import 'package:file_picker/file_picker.dart';
 
 class WorkroomPage extends StatelessWidget {
   @override
@@ -11,11 +14,7 @@ class WorkroomPage extends StatelessWidget {
       initialRoute: '/chatList',
       routes: <String, WidgetBuilder>{
         // Route to list of chats (work rooms)
-        '/chatList': (BuildContext context) => GestureDetector(
-              child: WorkRoomList(),
-              onTap: () => FocusScope.of(context)
-                  .unfocus(), // Hide keyboard when tap other parts
-            ),
+        '/chatList': (BuildContext context) => WorkRoomList(),
         // Route to search chat
         '/searchChat': (BuildContext context) => GestureDetector(
               child: SearchChat(),
@@ -267,38 +266,41 @@ class SearchChatState extends State<SearchChat> {
             Navigator.of(context).pop();
           },
         ),
-        middle: Container(
-          decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(17),
-            color: Colors.grey[400],
-          ),
-          child: Padding(
-            padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
-            child: Row(
-              children: [
-                // Search icon
-                Padding(
-                  padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
-                  child: Icon(
-                    Icons.search,
-                  ),
-                ),
-                // Textfield to search
-                Expanded(
-                  child: TextField(
-                    controller: _controller,
-                    onChanged: (text) {
-                      textChanged(text, args);
-                    },
-                    decoration: InputDecoration(
-                      border: InputBorder.none,
+        middle: Padding(
+          padding: const EdgeInsets.all(5.0),
+          child: Container(
+            decoration: BoxDecoration(
+              borderRadius: BorderRadius.circular(17),
+              color: Colors.grey[400],
+            ),
+            child: Padding(
+              padding: const EdgeInsets.fromLTRB(17, 5, 17, 5),
+              child: Row(
+                children: [
+                  // Search icon
+                  Padding(
+                    padding: EdgeInsets.fromLTRB(0, 0, 5, 0),
+                    child: Icon(
+                      Icons.search,
                     ),
-                    maxLines: 1,
-                    textAlign: TextAlign.left,
-                    textAlignVertical: TextAlignVertical.center,
                   ),
-                ),
-              ],
+                  // Textfield to search
+                  Expanded(
+                    child: TextField(
+                      controller: _controller,
+                      onChanged: (text) {
+                        textChanged(text, args);
+                      },
+                      decoration: InputDecoration(
+                        border: InputBorder.none,
+                      ),
+                      maxLines: 1,
+                      textAlign: TextAlign.left,
+                      textAlignVertical: TextAlignVertical.center,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -322,12 +324,17 @@ class ChatPage extends StatefulWidget {
 class ChatPageState extends State<ChatPage> {
   final TextEditingController _textEditingController =
       new TextEditingController();
+  final imagePicker = ImagePicker();
+
+  // Uploading file & picture
+  Widget uploadingFile;
 
   String myAccount = "Charlie Benello";
 
   // Text entered
   String _text = '';
 
+  // Dealing with text input
   void _handleText(String e) {
     setState(() {
       _text = e;
@@ -340,12 +347,32 @@ class ChatPageState extends State<ChatPage> {
     super.dispose();
   }
 
+  // Dealing with camera input
+  Future getImageFromCamera() async {
+    final pickedFile = await ImagePicker.pickImage(source: ImageSource.camera);
+
+    setState(() {
+      uploadingFile = Image.file(File(pickedFile.path));
+    });
+  }
+
+  // Dealing with photo input
+  Future getImageFromGallery() async {
+    final pickedFile = await ImagePicker.pickImage(source: ImageSource.gallery);
+
+    setState(() {
+      uploadingFile = Image.file(File(pickedFile.path));
+    });
+  }
+
   // Control the height of input part
   double textfieldHeight() {
-    if (_text == '') {
+    if (_text == '' && uploadingFile == null) {
       return 50;
+    } else if (uploadingFile != null) {
+      return MediaQuery.of(context).size.height / 2;
     } else {
-      return double.infinity;
+      return MediaQuery.of(context).size.height / 4;
     }
   }
 
@@ -465,9 +492,13 @@ class ChatPageState extends State<ChatPage> {
     // Actions when report button is pressed
     final actions = ["Report this group", "Leave this group"];
 
-    return CupertinoPageScaffold(
-      resizeToAvoidBottomInset: false,
-      navigationBar: CupertinoNavigationBar(
+    ObstructingPreferredSizeWidget bar;
+
+    if (MediaQuery.of(context).viewInsets.bottom != 0.0 &&
+        MediaQuery.of(context).orientation == Orientation.landscape) {
+      bar = null;
+    } else {
+      bar = CupertinoNavigationBar(
           // Button to go back to workroom list
           leading: CupertinoNavigationBarBackButton(
             onPressed: () {
@@ -509,7 +540,12 @@ class ChatPageState extends State<ChatPage> {
                 );
               }).toList();
             }),
-          )),
+          ));
+    }
+
+    return CupertinoPageScaffold(
+      resizeToAvoidBottomInset: false,
+      navigationBar: bar,
       child: Column(
         mainAxisSize: MainAxisSize.min,
         children: [
@@ -584,7 +620,7 @@ class ChatPageState extends State<ChatPage> {
                         child: IconButton(
                           icon: Icon(Icons.photo_camera),
                           iconSize: 34,
-                          onPressed: null,
+                          onPressed: getImageFromCamera,
                         ),
                       ),
                     ),
@@ -597,11 +633,11 @@ class ChatPageState extends State<ChatPage> {
                         child: IconButton(
                           icon: Icon(Icons.photo),
                           iconSize: 34,
-                          onPressed: null,
+                          onPressed: getImageFromGallery,
                         ),
                       ),
                     ),
-                    // Text input
+                    // User input bar
                     Expanded(
                       child: Container(
                         decoration: BoxDecoration(
@@ -613,21 +649,57 @@ class ChatPageState extends State<ChatPage> {
                           child: Theme(
                             data: Theme.of(context)
                                 .copyWith(splashColor: Colors.transparent),
-                            child: TextField(
-                              controller: _textEditingController,
-                              onChanged: _handleText,
-                              decoration: InputDecoration(
-                                border: InputBorder.none,
-                              ),
-                              keyboardType: TextInputType.multiline,
-                              autocorrect: true,
-                              autofocus: false,
-                              // No limit of words number and lines
-                              maxLines: null,
-                              maxLength: null,
-                              obscureText: false,
-                              textAlign: TextAlign.left,
-                              textAlignVertical: TextAlignVertical.top,
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.end,
+                              children: [
+                                Expanded(
+                                  child: Scrollbar(
+                                    isAlwaysShown: false,
+                                    child: SingleChildScrollView(
+                                      // If uploading file has not selected, show textfield otherwise show the file
+                                      child: uploadingFile == null
+                                          ? TextField(
+                                              controller:
+                                                  _textEditingController,
+                                              onChanged: _handleText,
+                                              decoration: InputDecoration(
+                                                border: InputBorder.none,
+                                              ),
+                                              keyboardType:
+                                                  TextInputType.multiline,
+                                              autocorrect: true,
+                                              autofocus: false,
+                                              // No limit of words number and lines
+                                              maxLines: null,
+                                              maxLength: null,
+                                              obscureText: false,
+                                              textAlign: TextAlign.left,
+                                              textAlignVertical:
+                                                  TextAlignVertical.top,
+                                            )
+                                          : uploadingFile,
+                                    ),
+                                  ),
+                                ),
+                                _text != "" || uploadingFile != null
+                                    ? IconButton(
+                                        icon: Icon(
+                                          Icons.close,
+                                          color: Colors.black26,
+                                        ),
+                                        onPressed: () {
+                                          setState(() {
+                                            if (uploadingFile != null) {
+                                              uploadingFile = null;
+                                            } else {
+                                              _textEditingController.clear();
+                                              _text = "";
+                                            }
+                                          });
+                                        },
+                                      )
+                                    : Container()
+                              ],
                             ),
                           ),
                         ),
@@ -640,12 +712,17 @@ class ChatPageState extends State<ChatPage> {
                       child: FittedBox(
                         fit: BoxFit.fill,
                         child: IconButton(
-                            icon: Icon(Icons.send),
-                            iconSize: 34,
-                            onPressed: () => {
-                                  _textEditingController.text = "",
-                                  FocusScope.of(context).unfocus()
-                                }),
+                          icon: Icon(Icons.send),
+                          iconSize: 34,
+                          onPressed: () => {
+                            setState(() {
+                              _text = "";
+                              _textEditingController.clear();
+                              uploadingFile = null;
+                              FocusScope.of(context).unfocus();
+                            })
+                          },
+                        ),
                       ),
                     ),
                   ],
