@@ -78,7 +78,7 @@ class WorkRoomList extends StatelessWidget {
     ],
   ];
 
-  Widget workroomTile(List room, BuildContext context) {
+  static Widget workroomTile(List room, BuildContext context) {
     IconData classIcon;
     // Check if it is class or not
     if (room[0]) {
@@ -149,7 +149,7 @@ class WorkRoomList extends StatelessWidget {
     );
   }
 
-  List<Widget> workroomList(BuildContext context) {
+  static List<Widget> workroomList(BuildContext context, List workrooms) {
     // This create a list of all workroom tiles
     List<Widget> list = [];
     Container line = Container(
@@ -177,7 +177,7 @@ class WorkRoomList extends StatelessWidget {
         right: 0,
         bottom: 0,
         child: ListView(
-          children: workroomList(context),
+          children: workroomList(context, workrooms),
           physics: const AlwaysScrollableScrollPhysics(),
         ),
       ),
@@ -218,7 +218,8 @@ class WorkRoomList extends StatelessWidget {
                 ),
               ),
               onTap: () {
-                Navigator.of(context).pushNamed('/searchChat');
+                Navigator.of(context)
+                    .pushNamed('/searchChat', arguments: workrooms);
               },
             ),
           ),
@@ -237,9 +238,26 @@ class SearchChat extends StatefulWidget {
 
 class SearchChatState extends State<SearchChat> {
   final _controller = TextEditingController();
+  // List of rooms whose names match with user input
+  List possibleRooms = [];
+
+  void textChanged(String e, List workrooms) {
+    setState(() {
+      possibleRooms = [];
+      for (var x in workrooms) {
+        // Case doesn't matter
+        if (x[1].toString().toLowerCase().contains(e.toLowerCase())) {
+          possibleRooms.add(x);
+        }
+      }
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    // Argument (list about chat) from the navigator
+    final List args = ModalRoute.of(context).settings.arguments;
+
     return CupertinoPageScaffold(
       resizeToAvoidBottomInset: false,
       navigationBar: CupertinoNavigationBar(
@@ -269,6 +287,9 @@ class SearchChatState extends State<SearchChat> {
                 Expanded(
                   child: TextField(
                     controller: _controller,
+                    onChanged: (text) {
+                      textChanged(text, args);
+                    },
                     decoration: InputDecoration(
                       border: InputBorder.none,
                     ),
@@ -282,7 +303,11 @@ class SearchChatState extends State<SearchChat> {
           ),
         ),
       ),
-      child: ListView(),
+      // Main listview for possible workrooms
+      child: ListView(
+        children: WorkRoomList.workroomList(context, possibleRooms),
+        physics: const AlwaysScrollableScrollPhysics(),
+      ),
     );
   }
 }
