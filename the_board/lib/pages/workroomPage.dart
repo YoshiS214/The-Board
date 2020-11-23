@@ -4,6 +4,7 @@ import 'package:flutter/cupertino.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:file_picker/file_picker.dart';
+import 'package:path/path.dart';
 
 class WorkroomPage extends StatelessWidget {
   @override
@@ -51,8 +52,9 @@ class WorkRoomList extends StatelessWidget {
       "5.00PM",
       "Can someone send the link to the Jamboard from the lesson?",
       [
-        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!"],
-        ["Charlie Benello", "1:04 PM", "https://www.cl.cam.ac.uk"]
+        ["Felix Waller", "1:30 PM", null, null],
+        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!", null],
+        ["Charlie Benello", "1:04 PM", "https://www.cl.cam.ac.uk", null]
       ]
     ],
     [
@@ -61,8 +63,8 @@ class WorkRoomList extends StatelessWidget {
       "1.34PM",
       "Can someone send the link to the Jamboard from the lesson?",
       [
-        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!"],
-        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!"]
+        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!", null],
+        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!", null]
       ]
     ],
     [
@@ -71,8 +73,8 @@ class WorkRoomList extends StatelessWidget {
       "Yesterday",
       "Can someone send the link to the Jamboard from the lesson?",
       [
-        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!"],
-        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!"]
+        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!", null],
+        ["Felix Waller", "1:24 PM", "Ah - thanks for the explanation!", null]
       ]
     ],
   ];
@@ -243,10 +245,12 @@ class SearchChatState extends State<SearchChat> {
   void textChanged(String e, List workrooms) {
     setState(() {
       possibleRooms = [];
-      for (var x in workrooms) {
-        // Case doesn't matter
-        if (x[1].toString().toLowerCase().contains(e.toLowerCase())) {
-          possibleRooms.add(x);
+      if (e.isNotEmpty) {
+        for (var x in workrooms) {
+          // Case doesn't matter
+          if (x[1].toString().toLowerCase().contains(e.toLowerCase())) {
+            possibleRooms.add(x);
+          }
         }
       }
     });
@@ -352,7 +356,10 @@ class ChatPageState extends State<ChatPage> {
     final pickedFile = await ImagePicker.pickImage(source: ImageSource.camera);
 
     setState(() {
-      uploadingFile = Image.file(File(pickedFile.path));
+      uploadingFile = ClipRRect(
+        child: Image.file(File(pickedFile.path)),
+        borderRadius: BorderRadius.circular(8.0),
+      );
     });
   }
 
@@ -361,12 +368,28 @@ class ChatPageState extends State<ChatPage> {
     final pickedFile = await ImagePicker.pickImage(source: ImageSource.gallery);
 
     setState(() {
-      uploadingFile = Image.file(File(pickedFile.path));
+      uploadingFile = ClipRRect(
+        child: Image.file(File(pickedFile.path)),
+        borderRadius: BorderRadius.circular(8.0),
+      );
     });
   }
 
+  Future getFileFromDevice() async {
+    File file = await FilePicker.getFile();
+
+    // Write a fuction to upload file....
+
+    uploadingFile = Column(
+      children: [
+        Icon(Icons.file_present),
+        Material(child: Text(basename(file.path)))
+      ],
+    );
+  }
+
   // Control the height of input part
-  double textfieldHeight() {
+  double textfieldHeight(BuildContext context) {
     if (_text == '' && uploadingFile == null) {
       return 50;
     } else if (uploadingFile != null) {
@@ -384,6 +407,12 @@ class ChatPageState extends State<ChatPage> {
     var accountIcon;
     var cardColor;
     var textColor;
+    Widget mainContent;
+
+    File attachment = chat[3];
+
+    // Image file supported by Image.file()
+    const supported = ["jpeg", "png", "gif", "webp", "bmp", "wbmp"];
 
     if (chat[0] == myAccount) {
       // If chat is mine,
@@ -419,67 +448,152 @@ class ChatPageState extends State<ChatPage> {
       textColor = Theme.of(context).textTheme.bodyText1.color;
     }
 
+    // Whether chat contain any file
+    if (attachment != null) {
+      if (supported.contains(basename(attachment.path).split(".")[-1])) {
+        // If file is image
+        mainContent = ClipRRect(
+          child: Image.file(attachment),
+          borderRadius: BorderRadius.circular(8.0),
+        );
+      } else {
+        // If file is not image
+        mainContent = Column(
+          children: [
+            IconButton(
+              icon: Icon(Icons.file_present),
+              onPressed: null,
+            ),
+            Material(child: Text(basename(attachment.path)))
+          ],
+        );
+      }
+    } else {
+      //Just for testing....
+      if (chat[2] == null) {
+        mainContent = ClipRRect(
+          child: Image.network(
+              'https://www.stpaulsschool.org.uk/wp-content/uploads/2019/10/SPS_013-2048x1363.jpg'),
+          borderRadius: BorderRadius.circular(8.0),
+        );
+      } else {
+        // If there is no attachment
+        mainContent = Material(
+          color: Colors.transparent,
+          child: Text(
+            chat[2],
+            style: TextStyle(color: textColor),
+          ),
+        );
+      }
+    }
+
     return Padding(
         padding: padding,
-        child: Container(
-          decoration: BoxDecoration(
-            color: cardColor,
-            borderRadius: BorderRadius.only(
-              topRight: radiusR,
-              bottomRight: radiusR,
-              topLeft: radiusL,
-              bottomLeft: radiusL,
+        child: GestureDetector(
+          child: Container(
+            decoration: BoxDecoration(
+              color: cardColor,
+              borderRadius: BorderRadius.only(
+                topRight: radiusR,
+                bottomRight: radiusR,
+                topLeft: radiusL,
+                bottomLeft: radiusL,
+              ),
             ),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.all(8.0),
-            child: Row(
-              children: [
-                // Account icon
-                accountIcon,
-                Flexible(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          // Show person's name made the chat
-                          Material(
-                            color: Colors.transparent,
-                            child: Text(
-                              chat[0],
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                color: textColor,
-                              ),
-                              maxLines: 1,
-                            ),
-                          ),
-                          // Show data that the chat was posted
-                          Material(
+            child: Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: Row(
+                children: [
+                  // Account icon
+                  accountIcon,
+                  Flexible(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                          children: [
+                            // Show person's name made the chat
+                            Material(
                               color: Colors.transparent,
                               child: Text(
-                                chat[1],
-                                style: TextStyle(color: textColor),
+                                chat[0],
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: textColor,
+                                ),
                                 maxLines: 1,
-                              )),
-                        ],
-                      ),
-                      // Show main text
-                      Material(
-                        color: Colors.transparent,
-                        child: Text(
-                          chat[2],
-                          style: TextStyle(color: textColor),
+                              ),
+                            ),
+                            // Show data that the chat was posted
+                            Material(
+                                color: Colors.transparent,
+                                child: Text(
+                                  chat[1],
+                                  style: TextStyle(color: textColor),
+                                  maxLines: 1,
+                                )),
+                          ],
                         ),
-                      )
-                    ],
-                  ),
-                )
-              ],
+                        mainContent
+                      ],
+                    ),
+                  )
+                ],
+              ),
             ),
           ),
+          onLongPress: () {
+            showDialog(
+                context: context,
+                builder: (context) {
+                  return SimpleDialog(
+                    title: mainContent,
+                    backgroundColor: cardColor,
+                    children: [
+                      // If it is file, option will be Save otherwise it will be Copy
+                      attachment != null
+                          ? SimpleDialogOption(
+                              child: Material(
+                                  child: Text(
+                                    "Save",
+                                    style: TextStyle(color: textColor),
+                                  ),
+                                  color: Colors.transparent),
+                              onPressed: null, // Fuction to save file
+                            )
+                          : SimpleDialogOption(
+                              child: Material(
+                                  child: Text(
+                                    "Copy",
+                                    style: TextStyle(color: textColor),
+                                  ),
+                                  color: Colors.transparent),
+                              onPressed: null, // Function to copy text
+                            ),
+                      SimpleDialogOption(
+                        child: Material(
+                            child: Text(
+                              "Delete",
+                              style: TextStyle(color: textColor),
+                            ),
+                            color: Colors.transparent),
+                        onPressed: null, // Function to delete this chat
+                      ),
+                      SimpleDialogOption(
+                        child: Material(
+                            child: Text(
+                              "Report",
+                              style: TextStyle(color: textColor),
+                            ),
+                            color: Colors.transparent),
+                        onPressed: null, // Function to report this chat
+                      )
+                    ],
+                  );
+                });
+          },
         ));
   }
 
@@ -580,7 +694,7 @@ class ChatPageState extends State<ChatPage> {
           ),
           // Input part
           ConstrainedBox(
-            constraints: BoxConstraints(maxHeight: textfieldHeight()),
+            constraints: BoxConstraints(maxHeight: textfieldHeight(context)),
             child: Container(
               decoration: BoxDecoration(
                 color: Colors.grey,
@@ -607,7 +721,7 @@ class ChatPageState extends State<ChatPage> {
                         child: IconButton(
                           icon: Icon(Icons.add),
                           iconSize: 34,
-                          onPressed: null,
+                          onPressed: getFileFromDevice,
                         ),
                       ),
                     ),
@@ -681,6 +795,7 @@ class ChatPageState extends State<ChatPage> {
                                     ),
                                   ),
                                 ),
+                                // Deleting button that comes up only when there is either text or file
                                 _text != "" || uploadingFile != null
                                     ? IconButton(
                                         icon: Icon(
