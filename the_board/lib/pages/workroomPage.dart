@@ -379,13 +379,14 @@ class ChatPageState extends State<ChatPage> {
     File file = await FilePicker.getFile();
 
     // Write a fuction to upload file....
-
-    uploadingFile = Column(
-      children: [
-        Icon(Icons.file_present),
-        Material(child: Text(basename(file.path)))
-      ],
-    );
+    setState(() {
+      uploadingFile = Column(
+        children: [
+          Icon(Icons.file_present),
+          Material(child: Text(basename(file.path)))
+        ],
+      );
+    });
   }
 
   // Control the height of input part
